@@ -26,6 +26,26 @@ func _exit_tree() -> void:
 #####################################
 #####################################
 
+
+func _get_action_text_for_convert_to_path() -> String:
+	match TranslationServer.get_locale():
+		"ja":
+			return "Pathに変換"
+		_:
+			return "convert to Path"
+
+func _get_action_text_for_convert_to_uid() -> String:
+	match TranslationServer.get_locale():
+		"ja":
+			return "UIDに変換"
+		_:
+			return "convert to UID"
+
+
+#####################################
+#####################################
+
+
 func initialized() -> void:
 	var script_editor:ScriptEditor = EditorInterface.get_script_editor()
 	if not script_editor.is_node_ready():
@@ -35,7 +55,7 @@ func initialized() -> void:
 	update_code_edits(script_editor)
 
 const EditorHelpBitToolTipHelper = preload("uid://c4oaf7y81tido")
-const _CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT:String = "convert_to_path_or_uid"
+const _ACTION_CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT:String = "convert_to_path_or_uid"
 
 ##ツールチップに　tween　の奴を追加するのがこの関数です
 func _on_symbol_hovered(symbol: String, line: int, column: int, code_edit:CodeEdit) -> void:
@@ -54,29 +74,23 @@ func _on_symbol_hovered(symbol: String, line: int, column: int, code_edit:CodeEd
 	
 	if not ResourceLoader.exists(symbol):return
 	
-	tooltip_helper.text_label.newline()
-	tooltip_helper.text_label.push_meta(_CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT, RichTextLabel.META_UNDERLINE_ON_HOVER)
-	
+	_trigger(symbol, line, column, code_edit, tooltip_helper)
+
+
+func _trigger(symbol: String, line: int, column: int, code_edit:CodeEdit, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
+	var action_quantity:int = 0
 	
 	var icon_name:StringName = &"UID" if symbol.begins_with("res") else &"NodePath"
-	var icon:Texture2D = EditorInterface.get_base_control().get_theme_icon(icon_name, &"EditorIcons")
-	tooltip_helper.text_label.add_image(icon)
-	tooltip_helper.text_label.add_text("  ")
 	
-	var text:String = ""
-	
-	var locale:String = TranslationServer.get_locale()
-	match locale:
-		"ja":
-			text = "UIDに変換" if symbol.begins_with("res") else "Pathに変換"
-		_:
-			text = "convert to UID" if symbol.begins_with("res") else "convert to Path"
+	_add_action(
+		_ACTION_CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT,
+		EditorInterface.get_base_control().get_theme_icon(icon_name, &"EditorIcons"),
+		_get_action_text_for_convert_to_uid() if symbol.begins_with("res") else _get_action_text_for_convert_to_path(),
+		tooltip_helper
+	)
+	action_quantity += 1
 	
 	
-	tooltip_helper.text_label.add_text(text)
-	
-	
-	tooltip_helper.text_label.pop()
 	tooltip_helper.text_label.meta_clicked.connect(_on_meta_clicked.bind(symbol, line, column, code_edit, tooltip_helper))
 	
 	if not tooltip_helper.text_label.is_finished():
@@ -86,10 +100,26 @@ func _on_symbol_hovered(symbol: String, line: int, column: int, code_edit:CodeEd
 
 
 func _on_meta_clicked(meta:Variant, symbol: String, line: int, column: int, code_edit:CodeEdit, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
-	if meta == _CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT:
-		_convert(symbol, line, column, code_edit, tooltip_helper)
+	if meta == _ACTION_CONVERT_TO_PATH_OR_UID_META_CLICK_TEXT:
+		_action_convert(symbol, line, column, code_edit, tooltip_helper)
 
-func _convert(symbol: String, line: int, column: int, code_edit:CodeEdit, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
+
+
+func _add_action(meta:Variant, icon:Texture2D, text:String, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
+	tooltip_helper.text_label.newline()
+	tooltip_helper.text_label.push_meta(meta, RichTextLabel.META_UNDERLINE_ON_HOVER)
+	
+	tooltip_helper.text_label.add_image(icon)
+	tooltip_helper.text_label.add_text("  ")
+	
+	tooltip_helper.text_label.add_text(text)
+	
+	
+	tooltip_helper.text_label.pop()
+
+
+
+func _action_convert(symbol: String, line: int, column: int, code_edit:CodeEdit, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
 	
 	if ResourceLoader.exists(symbol):
 		code_edit.begin_complex_operation()
