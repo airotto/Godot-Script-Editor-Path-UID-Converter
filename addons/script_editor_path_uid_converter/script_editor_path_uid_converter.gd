@@ -28,14 +28,14 @@ func _exit_tree() -> void:
 
 
 func _get_action_text_for_convert_to_path() -> String:
-	match TranslationServer.get_locale():
+	match TranslationServer.get_tool_locale():
 		"ja":
 			return "Pathに変換"
 		_:
 			return "convert to Path"
 
 func _get_action_text_for_convert_to_uid() -> String:
-	match TranslationServer.get_locale():
+	match TranslationServer.get_tool_locale():
 		"ja":
 			return "UIDに変換"
 		_:
