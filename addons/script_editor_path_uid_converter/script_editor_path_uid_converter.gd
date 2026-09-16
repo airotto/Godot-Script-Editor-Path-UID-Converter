@@ -96,7 +96,10 @@ func _trigger(symbol: String, line: int, column: int, code_edit:CodeEdit, toolti
 	if not tooltip_helper.text_label.is_finished():
 		await tooltip_helper.text_label.finished
 	
-	tooltip_helper.tooltip.size.y += tooltip_helper.text_label.get_line_height(0)
+	for i in range(action_quantity, 0, -1):
+		tooltip_helper.tooltip.size.y += tooltip_helper.text_label.get_line_height(tooltip_helper.text_label.get_line_count() - i)
+	
+	tooltip_helper.tooltip.size.y += tooltip_helper.text_label.get_line_height(tooltip_helper.text_label.get_line_count() - 1)
 
 
 func _on_meta_clicked(meta:Variant, symbol: String, line: int, column: int, code_edit:CodeEdit, tooltip_helper:EditorHelpBitToolTipHelper) -> void:
